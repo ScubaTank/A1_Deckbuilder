@@ -1,56 +1,50 @@
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Image = UnityEngine.UI.Image;
 
 public class Card : MonoBehaviour
 {
+    protected TurnManager turnManager;
+    [SerializeField]protected CardData _myCardData;
+    private SpriteRenderer _spriteRenderer;
 
-    [SerializeField] private TMP_Text _nameUI, _descriptionUI;
-    [SerializeField] private GameObject _imageObject, _backObject;
-
-    private Image _imageUI;
-    private bool _displayCard;
-    [field: SerializeField]
-    private CardData _myCardData;
-
-    public bool DisplayCard
+    public void Awake()
     {
-        get
-        {
-            return _displayCard;
+        var manager = GameObject.Find("GameManager");
+        turnManager = manager.GetComponent<TurnManager>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
+        _spriteRenderer.sprite = _myCardData.cardImage;
+    } 
+
+    public virtual void Use()
+    {
+        Debug.Log("Tried to use an undefined cardtype!");
+    }
+
+    public void Discard() 
+    {
+        Destroy(gameObject);
+    }
+
+    public CardType GetCardType(){
+        if(_myCardData == null){
+            Debug.Log("Tried to load undefined carddata!");
         }
-        set
-        {
-            _displayCard = value;
-            _backObject.gameObject.SetActive(_displayCard);
+        return _myCardData.cardType;
+    }
+
+    void OnMouseOver()
+    {
+        if (Input.GetMouseButtonDown(0)){
+            StartCoroutine(turnManager.CardSelected(this));
         }
     }
 
-    void Awake()
+    void OnDestroy()
     {
-        if(_myCardData != null)
-        {
-            RefreshData();
-        }
+        turnManager.ExpendCard(this);
     }
 
-    private void RefreshData()
-    {
-        _imageUI = _imageObject.GetComponent<Image>();
-        _nameUI.text = _myCardData.cardName;
-        _descriptionUI.text = _myCardData.cardDescription;
-        _imageUI.sprite = _myCardData.cardImage;
-    }
-    
-    public void UpdateCard(CardData data)
-    {
-        _myCardData = data;
-        RefreshData();
-    }
-
-    public CardData GetCardData()
-    {
-        return _myCardData;
-    }
 }
